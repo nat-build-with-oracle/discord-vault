@@ -21,9 +21,10 @@ _default:
 check:
     @{{dvault}} check
 
-# ONE-TIME: create the isolated vault. recipient = your gpg key (e.g. nat@mba.wg)
-init recipient:
-    @{{dvault}} init {{recipient}}
+# ONE-TIME: create the isolated vault. recipients = gpg keys that can decrypt
+# (one or more — e.g. `just init nat@mba.wg nh@oracle.local` for a backup copy)
+init +recipients:
+    @{{dvault}} init {{recipients}}
 
 # add / update a token — paste it at the prompt (never appears in shell history)
 add name:

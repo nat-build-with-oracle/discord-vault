@@ -30,7 +30,7 @@ const need = (arg: string | undefined, usage: string): arg is string => {
   return true;
 };
 
-const [cmd = "check", arg] = process.argv.slice(2);
+const [cmd = "check", arg, ...more] = process.argv.slice(2);
 
 switch (cmd) {
   case "check": {
@@ -45,8 +45,11 @@ switch (cmd) {
     break;
   }
   case "init":
-    if (need(arg, "usage: dvault init <gpg-id>   (e.g. nat@mba.wg)")) {
-      pass("init", arg);
+    // multi-recipient (heimdall's ask): pass encrypts every secret to ALL ids given, so a
+    // second machine can decrypt its copy WITHOUT any private key ever crossing machines —
+    // e.g. `dvault init nat@mba.wg nh@oracle.local` after importing nh's PUBLIC key here.
+    if (need(arg, "usage: dvault init <gpg-id> [gpg-id2 ...]   (e.g. nat@mba.wg nh@oracle.local)")) {
+      pass("init", arg, ...more);
       pass("git", "init");
     }
     break;
@@ -64,5 +67,5 @@ switch (cmd) {
     break;
   default:
     console.log("dvault — isolated Discord token vault (Bun)");
-    console.log("usage: dvault {check | init <gpg-id> | add <name> | ls | show <name> | rm <name>}");
+    console.log("usage: dvault {check | init <gpg-id> [gpg-id2 ...] | add <name> | ls | show <name> | rm <name>}");
 }

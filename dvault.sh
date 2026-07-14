@@ -22,9 +22,10 @@ case "$cmd" in
     echo "tokens:"; pass ls 2>/dev/null | tail -n +2 || echo "  (none yet)"
     ;;
   init)
-    [ -n "${1:-}" ] || { echo "usage: dvault init <gpg-id>   (e.g. nat@mba.wg)"; exit 1; }
-    pass init "$1"; pass git init
-    echo "✓ vault ready at $PASSWORD_STORE_DIR (recipient $1, local git history)"
+    # multi-recipient: every id given can decrypt — backup copies without moving private keys
+    [ -n "${1:-}" ] || { echo "usage: dvault init <gpg-id> [gpg-id2 ...]   (e.g. nat@mba.wg nh@oracle.local)"; exit 1; }
+    pass init "$@"; pass git init
+    echo "✓ vault ready at $PASSWORD_STORE_DIR (recipients: $*, local git history)"
     ;;
   add)
     [ -n "${1:-}" ] || { echo "usage: dvault add <name>   (e.g. penny)"; exit 1; }
