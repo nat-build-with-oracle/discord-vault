@@ -17,12 +17,19 @@ import { existsSync, readFileSync } from "node:fs"; // sync reads → no top-lev
 const HOME = process.env.HOME!;
 const VAULT = process.env.DISCORD_VAULT ?? `${HOME}/.discord-vault`;
 // pin the store dir → this can NEVER touch ~/.password-store
-const env = { ...process.env, PASSWORD_STORE_DIR: VAULT };
-
 // Bun.spawnSync resolves the executable against the PROCESS's PATH, not the env option —
-// and non-interactive ssh ships a bare PATH. So locate the pass binary explicitly.
+// and non-interactive ssh ships a bare PATH. So locate pass (and the GNU getopt its
+// darwin platform shim needs) explicitly instead of trusting PATH.
 const PASS_BIN =
   ["/opt/homebrew/bin/pass", "/usr/local/bin/pass", "/usr/bin/pass"].find(p => existsSync(p)) ?? "pass";
+const GETOPT = ["/opt/homebrew/opt/gnu-getopt/bin/getopt", "/usr/local/opt/gnu-getopt/bin/getopt"]
+  .find(p => existsSync(p));
+const env = {
+  ...process.env,
+  PASSWORD_STORE_DIR: VAULT,
+  PATH: `${process.env.PATH ?? ""}:/opt/homebrew/bin:/usr/local/bin`,
+  ...(GETOPT ? { GETOPT } : {}),
+};
 
 const tokenPath = (name: string) => `discord/${name}-oracle-token`;
 
