@@ -17,19 +17,18 @@ import { existsSync, readFileSync } from "node:fs"; // sync reads → no top-lev
 const HOME = process.env.HOME!;
 const VAULT = process.env.DISCORD_VAULT ?? `${HOME}/.discord-vault`;
 // pin the store dir → this can NEVER touch ~/.password-store
-// PATH gets brew/local bins appended: non-interactive ssh ships a bare PATH and
-// spawnSync("pass") would ENOENT even though pass is installed.
-const env = {
-  ...process.env,
-  PASSWORD_STORE_DIR: VAULT,
-  PATH: `${process.env.PATH ?? ""}:/opt/homebrew/bin:/usr/local/bin`,
-};
+const env = { ...process.env, PASSWORD_STORE_DIR: VAULT };
+
+// Bun.spawnSync resolves the executable against the PROCESS's PATH, not the env option —
+// and non-interactive ssh ships a bare PATH. So locate the pass binary explicitly.
+const PASS_BIN =
+  ["/opt/homebrew/bin/pass", "/usr/local/bin/pass", "/usr/bin/pass"].find(p => existsSync(p)) ?? "pass";
 
 const tokenPath = (name: string) => `discord/${name}-oracle-token`;
 
 // run `pass` with the terminal wired straight through — secrets never enter JS memory
 const pass = (...args: string[]) =>
-  Bun.spawnSync(["pass", ...args], { env, stdio: ["inherit", "inherit", "inherit"] }).exitCode ?? 1;
+  Bun.spawnSync([PASS_BIN, ...args], { env, stdio: ["inherit", "inherit", "inherit"] }).exitCode ?? 1;
 
 const need = (arg: string | undefined, usage: string): arg is string => {
   if (!arg) { console.log(usage); return false; }
