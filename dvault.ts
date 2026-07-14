@@ -17,7 +17,13 @@ import { existsSync, readFileSync } from "node:fs"; // sync reads → no top-lev
 const HOME = process.env.HOME!;
 const VAULT = process.env.DISCORD_VAULT ?? `${HOME}/.discord-vault`;
 // pin the store dir → this can NEVER touch ~/.password-store
-const env = { ...process.env, PASSWORD_STORE_DIR: VAULT };
+// PATH gets brew/local bins appended: non-interactive ssh ships a bare PATH and
+// spawnSync("pass") would ENOENT even though pass is installed.
+const env = {
+  ...process.env,
+  PASSWORD_STORE_DIR: VAULT,
+  PATH: `${process.env.PATH ?? ""}:/opt/homebrew/bin:/usr/local/bin`,
+};
 
 const tokenPath = (name: string) => `discord/${name}-oracle-token`;
 
